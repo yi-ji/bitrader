@@ -2,13 +2,16 @@ import time
 
 PRICE_BUFFER_SIZE = 100
 
-WATCH_INTERVAL = 1 # second(s)
-THINK_INTERVAL = 1 # second(s)
+WATCH_INTERVAL = 5 # second(s)
+THINK_INTERVAL = 5 # second(s)
 
 DEBUG = True
 
 USERNAME = 'jiyi0327@gmail.com'
 PASSWORD = 'himitsu desu.'
+
+PHANTOM_BIN = './phantom/phantomjs'
+LEVEL_DB = './data/price-db'
 
 class Logger:
 	def __init__(self):

@@ -29,7 +29,7 @@ def init_web_driver(driver):
 
 price_buffer = PriceBuffer() # price data of latest period, multiple frequency and period length maybe
 
-driver = webdriver.PhantomJS(executable_path='./phantom/phantomjs')
+driver = webdriver.PhantomJS(executable_path=config.PHANTOM_BIN)
 init_web_driver(driver)
 
 my_hand = hand.Hand(driver)

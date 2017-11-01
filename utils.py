@@ -1,17 +1,5 @@
-import time
-
-PRICE_BUFFER_SIZE = 100
-
-WATCH_INTERVAL = 5 # second(s)
-THINK_INTERVAL = 5 # second(s)
-
-DEBUG = True
-
-USERNAME = 'jiyi0327@gmail.com'
-PASSWORD = 'himitsu desu.'
-
-PHANTOM_BIN = './phantom/phantomjs'
-LEVEL_DB = './data/price-db'
+import config
+import json, leveldb, time
 
 class Logger:
 	def __init__(self):
@@ -24,7 +12,7 @@ class Logger:
 		return time.strftime("%d %b %Y %H:%M:%S", time.localtime())
 
 	def debug(self, msg):
-		if DEBUG:
+		if config.DEBUG:
 			msg = self.time_header() + ' [DEBUG]: ' + msg
 			self.log(msg)
 
@@ -41,3 +29,13 @@ class Logger:
 		self.log(msg)
 
 logger = Logger()
+
+def json2leveldb():
+	with open(config.PRICE_FILE) as price_data:
+		price_json = json.loads(price_data.read())
+		db = leveldb.LevelDB(config.LEVEL_DB)
+		for time_price_pair in price_json:
+			timestamp = str(int(time_price_pair[0])/1000)
+			price = str(time_price_pair[1])
+			db.Put(timestamp, price)
+

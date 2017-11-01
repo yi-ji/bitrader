@@ -15,12 +15,24 @@ class Eye:
 		self.db = leveldb.LevelDB(config.LEVEL_DB)
 
 	def get_eth_price(self, Ask_or_Bid):
-		return self.driver.find_element_by_css_selector('strong.bfPrice'+Ask_or_Bid).text.replace(',','')
+		return self.driver.find_element_by_css_selector('strong.bfPrice'+Ask_or_Bid).text.replace(',', '')
+
+	def get_balance(self):
+		return self.driver.find_element_by_id('JPYAmount').text.split(' ')[0].replace(',', '')
 
 	def prefill(self):
-		pass
+		now_time = int(time.time())
+		while True:
+			few_time_ago = now_time - config.PREFILL_RETRY_INTERVAL
+			past_data = list(self.db.RangeIter(key_from = str(few_time_ago), key_to = str(now_time)))
+			if len(past_data) >= config.PRICE_BUFFER_SIZE:
+				for ele in past_data[len(past_data)-config.PRICE_BUFFER_SIZE:]:
+					self.buffer.buffer.appendleft(ele[0]+': '+ele[1])
+				break
+		logger.info('price buffer prefilled with past data')
 
 	def start_watching(self):
+		self.prefill()
 		threading.Thread(target=self.watch).start()
 
 	def watch(self):

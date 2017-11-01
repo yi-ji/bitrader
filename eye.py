@@ -1,7 +1,7 @@
 import leveldb
 import config
-from config import logger
-import time
+from utils import logger
+import time, threading
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +17,13 @@ class Eye:
 	def get_eth_price(self, Ask_or_Bid):
 		return self.driver.find_element_by_css_selector('strong.bfPrice'+Ask_or_Bid).text.replace(',','')
 
+	def prefill(self):
+		pass
+
 	def start_watching(self):
+		threading.Thread(target=self.watch).start()
+
+	def watch(self):
 		while True:
 			time.sleep(config.WATCH_INTERVAL)
 			ask_price = self.get_eth_price('Ask')
@@ -25,3 +31,4 @@ class Eye:
 			timestamp = str(int(time.time()))
 			logger.debug('Ask: ' + ask_price + ' Bid: ' + bid_price)
 			self.db.Put(timestamp, str(ask_price)+'|'+str(bid_price))
+			self.buffer.buffer.appendleft(timestamp+': '+str(ask_price)+'|'+str(bid_price))

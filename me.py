@@ -1,13 +1,19 @@
 import eye, brain, hand, config
-from config import logger
-import collections, time
+from utils import logger
+import collections, time, sys, signal
 from selenium import webdriver
 
 class PriceBuffer:
 	def __init__(self):
-		self.buffer = collections.deque(config.PRICE_BUFFER_SIZE*[], config.PRICE_BUFFER_SIZE)
+		self.buffer = collections.deque(config.PRICE_BUFFER_SIZE*['not ready'], config.PRICE_BUFFER_SIZE)
+
+def signal_handler(signal, frame):
+	print('Terminating PhantomJS before exit')
+	driver.quit()
+	sys.exit(0)
 
 def init_web_driver(driver):
+	signal.signal(signal.SIGINT, signal_handler)
 	driver.set_window_size(1280, 1024)
 	logger.debug('opening login page')
 	driver.get('https://bitflyer.jp/en-jp/ex/EthPrice')
@@ -38,4 +44,6 @@ my_brain = brain.Brain(price_buffer, my_hand)
 
 my_eye.start_watching() # thread. collect data from website, put into (i) leveldb for future use; (ii) into buffer for brain to think about.
 my_brain.start_thinking() # read price data from buffer, send trading commands to hand.
+
+
 

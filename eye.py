@@ -1,7 +1,7 @@
 import leveldb
 import config
 from utils import logger
-import time, threading
+import time, threading, sys
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,25 +22,41 @@ class Eye:
 
 	def prefill(self):
 		now_time = int(time.time())
+		interval = 3600
 		while True:
-			few_time_ago = now_time - config.PREFILL_RETRY_INTERVAL
+			few_time_ago = now_time - interval
+			interval *= 2
+			if few_time_ago < 1451606400:
+				logger.error('not enough history data to prefill the buffer, exit')
+				sys.exit(0)
+			logger.debug('try to prefill data from timestamp '+str(few_time_ago)+' to '+str(now_time))
 			past_data = list(self.db.RangeIter(key_from = str(few_time_ago), key_to = str(now_time)))
-			if len(past_data) >= config.PRICE_BUFFER_SIZE:
+			if len(past_data) >= config.PRICE_BUFFER_SIZE/5:
 				for ele in past_data[len(past_data)-config.PRICE_BUFFER_SIZE:]:
-					self.buffer.buffer.appendleft(ele[0]+': '+ele[1])
+					if ele[1] != 'CLOSED|CLOSED':
+						self.buffer.buffer.appendleft(ele)
 				break
 		logger.info('price buffer prefilled with past data')
 
+	def update(self, ask, bid):
+		self.buffer.ask = int(ask)
+		self.buffer.bid = int(bid)
+		self.buffer.mid = (self.buffer.ask+self.buffer.bid)/2
+
 	def start_watching(self):
-		self.prefill()
 		threading.Thread(target=self.watch).start()
 
 	def watch(self):
+		time.sleep(3)
 		while True:
-			time.sleep(config.WATCH_INTERVAL)
 			ask_price = self.get_eth_price('Ask')
 			bid_price = self.get_eth_price('Bid')
+			if ask_price == 'CLOSED' or bid_price == 'CLOSED':
+				time.sleep(1)
+				continue
+			self.update(ask_price, bid_price)
 			timestamp = str(int(time.time()))
 			logger.debug('Ask: ' + ask_price + ' Bid: ' + bid_price)
 			self.db.Put(timestamp, str(ask_price)+'|'+str(bid_price))
-			self.buffer.buffer.appendleft(timestamp+': '+str(ask_price)+'|'+str(bid_price))
+			self.buffer.buffer.appendleft((timestamp, str(ask_price)+'|'+str(bid_price)))
+			time.sleep(config.WATCH_INTERVAL)

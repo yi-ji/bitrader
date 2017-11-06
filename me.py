@@ -1,14 +1,8 @@
 import eye, brain, hand, config
 from utils import logger
-import collections, time, sys, signal
+import time, sys, signal, leveldb
 from selenium import webdriver
-
-class PriceBuffer:
-	def __init__(self):
-		self.buffer = collections.deque([], config.PRICE_BUFFER_SIZE)
-		self.mid = None
-		self.ask = None
-		self.bid = None
+from memory import Memory
 
 def signal_handler(signal, frame):
 	print('Terminating PhantomJS before exit')
@@ -38,17 +32,17 @@ def init_web_driver(driver):
 driver = webdriver.PhantomJS(executable_path=config.PHANTOM_BIN)
 
 def main():
-	price_buffer = PriceBuffer() # price data of latest period, multiple frequency and period length maybe
-	my_hand = hand.Hand(driver)
-	my_eye = eye.Eye(price_buffer, driver)
-	my_brain = brain.Brain(price_buffer, my_hand)
+	db = leveldb.LevelDB(config.LEVEL_DB)
 
-	my_eye.prefill()
+	price_memory = Memory(db) # price data of latest period, multiple frequency and period length maybe
+
+	my_hand = hand.Hand(driver)
+	my_eye = eye.Eye(price_memory, driver)
+	my_brain = brain.Brain(price_memory, my_hand)
 
 	init_web_driver(driver)
 
 	my_eye.start_watching() # thread. collect data from website, put into (i) leveldb for future use; (ii) into buffer for brain to think about.
-	time.sleep(3)
 	my_brain.start_thinking() # read price data from buffer, send trading commands to hand.
 
 main()

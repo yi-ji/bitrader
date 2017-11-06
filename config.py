@@ -1,9 +1,13 @@
 import math, time
 
 PRICE_BUFFER_SIZE = 86400
+PRICE_CACHE_SIZE = 300
 
-WATCH_INTERVAL = 5 # second(s)
+RECORD_INTERVAL = 10 # second(s)
+WATCH_INTERVAL = 2 # second(s)
 THINK_INTERVAL = 5 # second(s)
+
+MOMENTUM_LR_RANGE = [10, 30, 60, 180] # seconds
 
 DEBUG = True
 

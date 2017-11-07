@@ -2,6 +2,7 @@ from utils import logger
 import time
 import config
 from selenium.common.exceptions import ElementNotVisibleException
+
 class Hand:
 	def __init__(self, _driver):
 		self.driver = _driver
@@ -38,6 +39,7 @@ class Hand:
 		logger.info('bought '+str(eth)+' ether')
 
 	def sell(self, price, eth=None, jpy=None):
+		logger.info('selling with price: '+str(price)+', amount '+str(eth)+' ether or '+str(jpy)+' JPY')
 		if eth is not None:
 			self.sell_by_eth(eth)
 		elif jpy is not None:

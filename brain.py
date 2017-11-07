@@ -53,25 +53,28 @@ class Brain:
 	def decide_trade(self, trend, momentum):
 		trend_avg = sum([float(b) for (a, b) in trend])/float(len(trend))
 		momentum_avg = float(sum(momentum))/float(len(momentum))
-		trade_amount = 50000*(-trend_avg)
+		trade_amount = 300000*(-trend_avg)
 		delta = min(abs(trade_amount), 1000*momentum_avg*momentum_avg)
 		trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
 		logger.debug('proposed trading amount: '+str(int(trade_amount)))
 		return int(trade_amount)
 
+	def think():
+		trend = self.get_trend()
+		momentum = self.get_momentum()
+
+		if trend and momentum:
+			history_buy_avg, history_sell_avg = self.memory.retrospect_trade()
+			trade_amount = self.decide_trade(trend, momentum)
+			if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
+				self.hand.buy(self.memory.ask, jpy=trade_amount)
+				self.memory.memorize_trade(self.memory.ask, trade_amount)
+			if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
+				self.hand.sell(self.memory.bid, jpy=-trade_amount)
+				self.memory.memorize_trade(self.memory.bid, trade_amount)
+
 	def start_thinking(self):
 		while True:
 			time.sleep(config.THINK_INTERVAL)
-
-			trend = self.get_trend()
-			momentum = self.get_momentum()
-
-			if trend and momentum:
-				history_buy_avg, history_sell_avg = self.memory.retrospect_trade()
-				trade_amount = self.decide_trade(trend, momentum)
-				if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
-					self.hand.buy(self.memory.ask, jpy=trade_amount)
-					self.memory.memorize_trade(self.memory.ask, trade_amount)
-				if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
-					self.hand.sell(self.memory.bid, jpy=-trade_amount)
-					self.memory.memorize_trade(self.memory.bid, trade_amount)
+			self.think()
+			

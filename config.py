@@ -9,13 +9,16 @@ THINK_INTERVAL = 5 # second(s)
 
 MOMENTUM_LR_RANGE = [10, 30, 60, 180] # seconds
 
+DAY0_TIMESTAMP = 1451606400
+
 DEBUG = True
 
 USERNAME = 'jiyi0327@gmail.com'
 PASSWORD = 'no can tell'
 
 PHANTOM_BIN = './phantom/phantomjs'
-LEVEL_DB = './data/price-db'
+PRICE_DB = './data/price-db'
+TRADE_DB = './data/trade-db'
 PRICE_FILE = './data/ETH_JPY.json'
 
 TRADE_RETRY_MAX = 5
@@ -24,6 +27,8 @@ INDICATERS = [(3600.0, 0.15),
 			  (28*24*3600.0, 0.05)]
 INDICATER_INETRVAL_INIT = 3600
 INTERVAL_GROW_FACTOR = 2
+
+EMAIL = ['jiyi0327@gmail.com']
 
 # function: y = Ax^B
 

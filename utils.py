@@ -1,9 +1,18 @@
 import config
-import json, leveldb, time
+import json, leveldb, time, smtplib, os
+from email.mime.text import MIMEText
 
 class Logger:
 	def __init__(self):
 		pass
+
+	def send_email(self, msg):
+		with open('email.txt', 'w') as f:
+			f.write('To: '+', '.join(config.EMAIL)+'\n')
+			f.write('Subject: bitrader notification'+'\n')
+			f.write('From: bitrader'+'\n')
+			f.write('\n'+msg+'\n')
+		p = os.popen('sendmail -t < email.txt', 'w')
 
 	def log(self, msg):
 		print(msg)
@@ -19,14 +28,17 @@ class Logger:
 	def info(self, msg):
 		msg = self.time_header() + ' [INFO]: ' + msg
 		self.log(msg)
+		self.send_email(msg)
 
 	def warn(self, msg):
 		msg = self.time_header() + ' [WARN]: ' + msg
 		self.log(msg)
+		self.send_email(msg)
 
 	def error(self, msg):
 		msg = self.time_header() + ' [ERROR]: ' + msg
 		self.log(msg)
+		self.send_email(msg)
 
 logger = Logger()
 
@@ -38,4 +50,5 @@ def json2leveldb():
 			timestamp = str(int(time_price_pair[0])/1000)
 			price = str(time_price_pair[1])
 			db.Put(timestamp, price)
+
 

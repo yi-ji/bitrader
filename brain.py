@@ -30,8 +30,8 @@ class Brain:
 				interval *= config.INTERVAL_GROW_FACTOR
 				time_point -= interval
 			price_sum += mid
-
-		logger.debug(str([(int(time.time()-a), b) for (a, b) in trend]))
+		logger.debug('trend: '+str([(int(time.time()-a), b) for (a, b) in trend]))
+		return trend
 
 	def get_momentum(self):
 		if len(self.memory.first_order) < max(config.MOMENTUM_LR_RANGE):
@@ -48,24 +48,30 @@ class Brain:
 			lr.fit(x,y)
 			momentum.append(lr.predict(0)[0][0])
 		logger.debug('momentums: '+str(momentum))
-		return sum(momentum)/float(len(momentum))
+		return momentum
 
-	def decide_buy(self, trend, momentum):
-		return -1
-
-	def decide_sell(self, trend):
-		return -1
+	def decide_trade(self, trend, momentum):
+		trend_avg = sum([float(b) for (a, b) in trend])/float(len(trend))
+		momentum_avg = float(sum(momentum))/float(len(momentum))
+		trade_amount = 50000*(-trend_avg)
+		delta = min(abs(trade_amount), 1000*momentum_avg*momentum_avg)
+		trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
+		logger.debug('proposed trading amount: '+str(int(trade_amount)))
+		return int(trade_amount)
 
 	def start_thinking(self):
 		while True:
 			time.sleep(config.THINK_INTERVAL)
+
 			trend = self.get_trend()
 			momentum = self.get_momentum()
 
-			buy_amount = self.decide_buy(trend, momentum)
-			if buy_amount > config.MIN_TRADE_AMOUNT:
-				self.hand.buy(self.buffer.ask, jpy=buy_amount)
-
-			sell_amount = self.decide_sell(trend)
-			if sell_amount > config.MIN_TRADE_AMOUNT:
-				self.hand.sell(self.buffer.bid, jpy=sell_amount)
+			if trend and momentum:
+				history_buy_avg, history_sell_avg = self.memory.retrospect_trade()
+				trade_amount = self.decide_trade(trend, momentum)
+				if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
+					self.hand.buy(self.memory.ask, jpy=trade_amount)
+					self.memory.memorize_trade(self.memory.ask, trade_amount)
+				if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
+					self.hand.sell(self.memory.bid, jpy=-trade_amount)
+					self.memory.memorize_trade(self.memory.bid, trade_amount)

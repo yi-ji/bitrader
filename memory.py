@@ -1,4 +1,6 @@
-import collections, time
+import collections
+import time
+import sys
 import config
 from utils import logger
 
@@ -46,7 +48,7 @@ class Memory:
         sell_avg /= sell_amount
         return (buy_avg, sell_avg)
 
-    def memorize_trade(self, priee, amount):
+    def memorize_trade(self, price, amount):
         self.trade_db.Put(str(int(time.time())), str(int(price)) + '|' + str(int(amount)))
         self.retrospect_trade()
 

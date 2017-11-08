@@ -64,7 +64,7 @@ class Brain:
 		momentum = self.get_momentum()
 
 		if trend and momentum:
-			history_buy_avg, history_sell_avg = self.memory.retrospect_trade()
+			history_buy_avg, history_sell_avg = self.memory.history_trade_avg
 			trade_amount = self.decide_trade(trend, momentum)
 			if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
 				self.hand.buy(self.memory.ask, jpy=trade_amount)

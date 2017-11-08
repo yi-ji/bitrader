@@ -47,6 +47,7 @@ class Memory:
 
 	def memorize_trade(self, priee, amount):
 		self.trade_db.Put(str(int(time.time())), str(int(price))+'|'+str(int(amount)))
+		self.retrospect_trade()
 
 	def retrospect_price(self):
 		now_time = int(time.time())

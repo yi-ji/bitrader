@@ -59,7 +59,7 @@ class Brain:
 		logger.debug('proposed trading amount: '+str(int(trade_amount)))
 		return int(trade_amount)
 
-	def think():
+	def think(self):
 		trend = self.get_trend()
 		momentum = self.get_momentum()
 

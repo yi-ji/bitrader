@@ -3,6 +3,6 @@ data/ETH-data/*
 data/test/*
 *.txt
 *.json
-*.log
+ghostdriver.log
 *.sh
 *.png

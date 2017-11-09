@@ -1,0 +1,8 @@
+*.pyc
+data/ETH-data/*
+data/test/*
+*.txt
+*.json
+*.log
+*.sh
+*.png

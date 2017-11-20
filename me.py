@@ -40,7 +40,7 @@ def main():
     price_db = leveldb.LevelDB(config.PRICE_DB)
     trade_db = leveldb.LevelDB(config.TRADE_DB)
 
-    price_memory = Memory(price_db, trade_db)  # price data of latest period, multiple frequency and period length maybe
+    price_memory = Memory(price_db, trade_db, int(time.time()))  # price data of latest period, multiple frequency and period length maybe
 
     my_hand = hand.Hand(driver)
     my_eye = eye.Eye(price_memory, driver)
@@ -51,5 +51,5 @@ def main():
     my_eye.start_watching()  # thread. collect data from website, put into (i) leveldb for future use; (ii) into buffer for brain to think about.
     my_brain.start_thinking()  # read price data from buffer, send trading commands to hand.
 
-
 main()
+

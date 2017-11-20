@@ -1,4 +1,4 @@
-import config
+import config, utils
 import time
 import itertools
 from utils import logger
@@ -11,28 +11,27 @@ class Brain:
         self.memory = _memory
         self.hand = _my_hand
 
-    def get_trend(self):
+    def get_trend(self, now_time):
         trend = []
 
         interval = config.INDICATER_INETRVAL_INIT
-        time_point = int(time.time()) - interval
+        time_point = now_time - interval
         price_sum = 0
 
         buffer_len = len(self.memory.buffer)
-        for buffer_iter in range(0, buffer_len - 1):
+        for buffer_iter in range(0, buffer_len):
             item = self.memory.buffer[buffer_iter]
             timestamp = int(item[0])
-            mid = [float(price) for price in item[1].split('|')]
-            mid = (mid[0] + mid[1]) / 2 if len(mid) > 1 else mid[0]
+            mid = utils.kv2mid(item)
             # print item, timestamp, mid, time_point
             if timestamp <= time_point:
                 average = float(price_sum) / float(buffer_iter)
                 trend.append((time_point, (self.memory.mid - average) / float(average)))
-                # print int(time.time())-time_point, average, '|', self.buffer.mid
+                # print now_time-time_point, average, '|', self.buffer.mid
                 interval *= config.INTERVAL_GROW_FACTOR
                 time_point -= interval
             price_sum += mid
-        logger.debug('trend: ' + str([(int(time.time() - a), b) for (a, b) in trend]))
+        logger.debug('trend: ' + str([(int(now_time - a), b) for (a, b) in trend]))
         return trend
 
     def get_momentum(self):
@@ -56,14 +55,14 @@ class Brain:
     def decide_trade(self, trend, momentum):
         trend_avg = sum([float(b) for (a, b) in trend]) / float(len(trend))
         momentum_avg = float(sum(momentum)) / float(len(momentum))
-        trade_amount = 300000 * (-trend_avg)
+        trade_amount = 350000 * (-trend_avg)
         delta = min(abs(trade_amount), 1000 * momentum_avg * momentum_avg)
         trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
         logger.debug('proposed trading amount: ' + str(int(trade_amount)))
         return int(trade_amount)
 
-    def think(self):
-        trend = self.get_trend()
+    def think(self, timestamp):
+        trend = self.get_trend(timestamp)
         momentum = self.get_momentum()
 
         if trend and momentum:
@@ -71,12 +70,12 @@ class Brain:
             trade_amount = self.decide_trade(trend, momentum)
             if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
                 self.hand.buy(self.memory.ask, jpy=trade_amount)
-                self.memory.memorize_trade(self.memory.ask, trade_amount)
+                self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
             if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
                 self.hand.sell(self.memory.bid, jpy=-trade_amount)
-                self.memory.memorize_trade(self.memory.bid, trade_amount)
+                self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
 
     def start_thinking(self):
         while True:
             time.sleep(config.THINK_INTERVAL)
-            self.think()
+            self.think(int(time.time()))

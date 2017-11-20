@@ -44,6 +44,10 @@ class Logger:
 
 logger = Logger()
 
+def kv2mid(kv):
+    mid = [int(price) for price in kv[1].split('|')]
+    mid = (mid[0] + mid[1]) / 2 if len(mid) > 1 else mid[0]
+    return mid
 
 def json2leveldb():
     with open(config.PRICE_FILE) as price_data:

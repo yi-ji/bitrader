@@ -51,7 +51,7 @@ class Memory:
 
     def memorize_trade(self, price, amount, timestamp):
         self.trade_db.Put(str(timestamp), str(int(price)) + '|' + str(int(amount)))
-        self.history_trade_avg = self.retrospect_trade()
+        self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
 
     def retrospect_price(self, time_from, time_to): # time_from -> time_to = past -> now
         interval = 3600

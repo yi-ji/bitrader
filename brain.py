@@ -55,7 +55,7 @@ class Brain:
     def decide_trade(self, trend, momentum):
         trend_avg = sum([float(b) for (a, b) in trend]) / float(len(trend))
         momentum_avg = float(sum(momentum)) / float(len(momentum))
-        trade_amount = 350000 * (-trend_avg)
+        trade_amount = 500000 * (-trend_avg)
         delta = min(abs(trade_amount), 1000 * momentum_avg * momentum_avg)
         trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
         logger.debug('proposed trading amount: ' + str(int(trade_amount)))

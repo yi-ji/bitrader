@@ -22,7 +22,7 @@ class Memory:
         self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
 
     def update(self, ask_price, bid_price, balance_eth, balance_jpy, timestamp):
-        self.balance_jpy, self.balance_eth = balance_jpy, balance_eth
+        self.balance_jpy, self.balance_eth = int(balance_jpy), float(balance_eth)
         self.ask, self.bid = int(ask_price), int(bid_price)
         self.mid = (self.ask + self.bid) / 2
         if self.cache:

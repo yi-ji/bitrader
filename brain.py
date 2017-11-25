@@ -1,5 +1,5 @@
 import config, utils
-import time
+import time, math
 import itertools
 from utils import logger
 from sklearn.linear_model import LinearRegression as LR
@@ -58,6 +58,10 @@ class Brain:
         trade_amount = 500000 * (-trend_avg)
         delta = min(abs(trade_amount), 1000 * momentum_avg * momentum_avg)
         trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
+        if trade_amount > 0:
+            trade_amount *= min(1, math.sqrt(float(self.memory.balance_jpy)/float(self.memory.balance_eth*self.memory.ask)))
+        else:
+            trade_amount *= min(1, math.sqrt(float(self.memory.balance_eth*self.memory.bid)/float(self.memory.balance_jpy)))
         logger.debug('proposed trading amount: ' + str(int(trade_amount)))
         return int(trade_amount)
 

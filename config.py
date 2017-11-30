@@ -15,7 +15,7 @@ DAY0_TIMESTAMP = 1451606400
 DEBUG = True
 
 USERNAME = 'jiyi0327@gmail.com'
-PASSWORD = 'no can tell'
+PASSWORD = 'Never put your password here!!'
 
 PHANTOM_BIN = './phantom/phantomjs'
 PRICE_DB = './data/price-db'

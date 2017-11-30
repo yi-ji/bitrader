@@ -9,13 +9,7 @@ class Eye:
         self.driver = _driver
         self.closed_retry = 0
 
-    def init_driver(self):
-        def signal_handler(signal, frame):
-            logger.debug('Terminating PhantomJS before exit')
-            self.driver.quit()
-            sys.exit(0)
-        signal.signal(signal.SIGINT, signal_handler)
-        self.driver.set_window_size(1280, 1024)
+    def refresh_driver(self):
         logger.debug('opening login page')
         self.driver.get('https://bitflyer.jp/login')
         email = self.driver.find_element_by_id('MainContent_email')
@@ -28,6 +22,15 @@ class Eye:
         self.driver.get('https://bitflyer.jp/en-jp/ex/EthPrice')
         logger.debug('go to eth price page')
         time.sleep(5)
+
+    def init_driver(self):
+        def signal_handler(signal, frame):
+            logger.debug('Terminating PhantomJS before exit')
+            self.driver.quit()
+            sys.exit(0)
+        signal.signal(signal.SIGINT, signal_handler)
+        self.driver.set_window_size(1280, 1024)
+        self.refresh_driver()
 
     def get_eth_price(self, Ask_or_Bid):
         return self.driver.find_element_by_css_selector('strong.bfPrice' + Ask_or_Bid).text.replace(',', '')
@@ -51,7 +54,8 @@ class Eye:
                 logger.debug('showing CLOSED')
                 self.closed_retry += 1
                 if self.closed_retry > 10:
-                    self.init_driver()
+                    logger.info('refresh web driver')
+                    self.refresh_driver()
                     self.closed_retry = 0
                 time.sleep(1)
                 continue

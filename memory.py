@@ -21,6 +21,12 @@ class Memory:
         self.retrospect_price(config.DAY0_TIMESTAMP, timestamp)
         self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
 
+    def print_state(self):
+        buffer_state = 'buffer: '+str(len(self.buffer))+'/'+str(config.PRICE_BUFFER_SIZE)
+        cache_state = 'cache: '+str(len(self.cache))+'/'+str(config.PRICE_CACHE_SIZE)
+        first_order_state = 'first_order: '+str(len(self.first_order))+'/'+str(config.PRICE_CACHE_SIZE)
+        logger.debug(', '.join([buffer_state, cache_state, first_order_state]))
+
     def update(self, ask_price, bid_price, balance_eth, balance_jpy, timestamp):
         self.balance_jpy, self.balance_eth = int(balance_jpy), float(balance_eth)
         self.ask, self.bid = int(ask_price), int(bid_price)
@@ -32,6 +38,7 @@ class Memory:
             self.record_timestamp = timestamp
             self.price_db.Put(str(timestamp), str(self.ask) + '|' + str(self.bid))
             self.buffer.appendleft((str(timestamp), str(self.ask) + '|' + str(self.bid)))
+        self.print_state()
 
     def retrospect_trade(self, time_from, time_to):
         history_trade = list(self.trade_db.RangeIter(key_from=str(time_from), key_to=str(time_to)))
@@ -54,16 +61,16 @@ class Memory:
         self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
 
     def retrospect_price(self, time_from, time_to): # time_from -> time_to = past -> now
-        interval = 3600
+        interval = 36000
         while True:
             timestamp = time_to - interval
             interval *= 2
-            if timestamp < time_from:
-                logger.error('not enough history data to prefill the buffer, exit')
-                sys.exit(0)
+            #if timestamp < time_from:
+            #    logger.error('not enough history data to prefill the buffer, exit')
+            #    sys.exit(0)
             logger.debug('try to prefill data from timestamp ' + str(timestamp) + ' to ' + str(time_to))
             past_data = list(self.price_db.RangeIter(key_from=str(timestamp), key_to=str(time_to)))
-            if len(past_data) >= config.PRICE_BUFFER_SIZE / 5:
+            if len(past_data) >= config.PRICE_BUFFER_SIZE or timestamp < time_from:
                 for ele in past_data[len(past_data) - config.PRICE_BUFFER_SIZE:]:
                     if ele[1] != 'CLOSED|CLOSED':
                         self.buffer.appendleft(ele)

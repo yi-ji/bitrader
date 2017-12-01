@@ -55,8 +55,8 @@ class Brain:
     def decide_trade(self, trend, momentum):
         trend_avg = sum([float(b) for (a, b) in trend]) / float(len(trend))
         momentum_avg = float(sum(momentum)) / float(len(momentum))
-        trade_amount = 500000 * (-trend_avg)
-        delta = min(abs(trade_amount), 1000 * momentum_avg * momentum_avg)
+        trade_amount = config.TRADE_AMOUNT_BASE * (-trend_avg)
+        delta = min(abs(trade_amount), config.DAMP_COEF * momentum_avg * momentum_avg)
         trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
         if trade_amount > 0:
             trade_amount *= min(1, math.sqrt(float(self.memory.balance_jpy)/float(self.memory.balance_eth*self.memory.ask)))
@@ -69,15 +69,17 @@ class Brain:
         trend = self.get_trend(timestamp)
         momentum = self.get_momentum()
 
-        if trend and momentum:
+        if len(trend) >= config.MIN_TREND_LEN and len(momentum) >= len(config.MOMENTUM_LR_RANGE):
             history_buy_avg, history_sell_avg = self.memory.history_trade_avg
             trade_amount = self.decide_trade(trend, momentum)
             if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
-                self.hand.buy(self.memory.ask, jpy=trade_amount)
-                self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
+                logger.debug('history_sell_avg: '+str(history_sell_avg))
+                if self.hand.buy(self.memory.ask, jpy=trade_amount):
+                    self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
             if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
-                self.hand.sell(self.memory.bid, jpy=-trade_amount)
-                self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
+                logger.debug('history_buy_avg: '+str(history_buy_avg))
+                if self.hand.sell(self.memory.bid, jpy=-trade_amount):
+                    self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
 
     def start_thinking(self):
         while True:

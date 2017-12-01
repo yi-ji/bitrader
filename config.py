@@ -1,7 +1,7 @@
 import math
 import time
 
-PRICE_BUFFER_SIZE = 86400
+PRICE_BUFFER_SIZE = 400000
 PRICE_CACHE_SIZE = 300
 
 RECORD_INTERVAL = 10  # second(s)
@@ -26,8 +26,8 @@ TRADE_RETRY_MAX = 5
 
 INDICATERS = [(3600.0, 0.15),
               (28 * 24 * 3600.0, 0.05)]
-INDICATER_INETRVAL_INIT = 1800
-INTERVAL_GROW_FACTOR = 2
+INDICATER_INETRVAL_INIT = 60
+INTERVAL_GROW_FACTOR = 4
 
 EMAIL = ['jiyi0327@gmail.com']
 
@@ -36,8 +36,11 @@ EMAIL = ['jiyi0327@gmail.com']
 coef_B = math.log(INDICATERS[0][1] / INDICATERS[1][1], INDICATERS[0][0] / INDICATERS[1][0])
 coef_A = INDICATERS[0][1] / math.pow(INDICATERS[0][0], coef_B)
 
-MIN_TRADE_AMOUNT = 40000
+MIN_TRADE_AMOUNT = 30000
+TRADE_AMOUNT_BASE = 350000
+DAMP_COEF = 1000
 
+MIN_TREND_LEN = 7
 
 def threshold(timestamp):
     x = time.time() - int(timestamp)

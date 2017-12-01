@@ -19,11 +19,13 @@ class Hand:
             self.buy_by_eth(float(jpy) / float(price))
         else:
             logger.warn('buying failed, eth and jpy both empty.')
-            return
+            return False
         if self.check_trade_record():
             logger.info('bought with' + detail)
+            return True
         else:
             logger.warn('buying failed!' + detail)
+            return False
 
     def check_trade_record(self):
         records = self.driver.find_elements_by_xpath("//td[@data-prop='exec_date']")
@@ -58,11 +60,13 @@ class Hand:
             self.sell_by_eth(float(jpy) / float(price))
         else:
             logger.warn('selling failed, eth and jpy both empty.')
-            return
+            return False
         if self.check_trade_record():
             logger.info('sold with' + detail)
+            return True
         else:
             logger.warn('selling failed!' + detail)
+            return False
 
     def sell_by_eth(self, eth):
         eth_input = self.driver.find_element_by_id('MainContent_TextBox1')

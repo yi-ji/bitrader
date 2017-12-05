@@ -61,22 +61,29 @@ class Memory:
         self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
 
     def retrospect_price(self, time_from, time_to): # time_from -> time_to = past -> now
-        interval = 36000
-        while True:
-            timestamp = time_to - interval
-            interval *= 2
-            #if timestamp < time_from:
-            #    logger.error('not enough history data to prefill the buffer, exit')
-            #    sys.exit(0)
-            logger.debug('try to prefill data from timestamp ' + str(timestamp) + ' to ' + str(time_to))
-            past_data = list(self.price_db.RangeIter(key_from=str(timestamp), key_to=str(time_to)))
-            if len(past_data) >= config.PRICE_BUFFER_SIZE or timestamp < time_from:
-                for ele in past_data[len(past_data) - config.PRICE_BUFFER_SIZE:]:
-                    if ele[1] != 'CLOSED|CLOSED':
-                        self.buffer.appendleft(ele)
-                        ele_mid = utils.kv2mid(ele)
-                        if self.cache:
-                            self.first_order.appendleft(ele_mid - self.cache[0])
-                        self.cache.appendleft(ele_mid)
-                break
-        logger.debug('price buffer prefilled with past data')
+        past_data = list(self.price_db.RangeIter(key_from=str(time_from), key_to=str(time_to)))
+        if len(past_data) > config.PRICE_BUFFER_SIZE:
+            past_data = past_data[len(past_data) - config.PRICE_BUFFER_SIZE:]
+        for ele in past_data:
+            if ele[1] != 'CLOSED|CLOSED':
+                self.buffer.appendleft(ele)
+                ele_mid = utils.kv2mid(ele)
+                if self.cache:
+                    self.first_order.appendleft(ele_mid - self.cache[0])
+                self.cache.appendleft(ele_mid)
+        # interval = 36000
+        # while True:
+        #     timestamp = time_to - interval
+        #     interval *= 2
+        #     past_data = list(self.price_db.RangeIter(key_from=str(timestamp), key_to=str(time_to)))
+        #     logger.debug('try to prefill data (' + str(len(past_data)) + ') from timestamp ' + str(timestamp) + ' to ' + str(time_to))
+        #     if len(past_data) >= config.PRICE_BUFFER_SIZE or timestamp < time_from:
+        #         for ele in past_data[len(past_data) - config.PRICE_BUFFER_SIZE:]:
+        #             if ele[1] != 'CLOSED|CLOSED':
+        #                 self.buffer.appendleft(ele)
+        #                 ele_mid = utils.kv2mid(ele)
+        #                 if self.cache:
+        #                     self.first_order.appendleft(ele_mid - self.cache[0])
+        #                 self.cache.appendleft(ele_mid)
+        #         break
+        logger.debug('price buffer prefilled with past data ('+str(len(past_data))+')')

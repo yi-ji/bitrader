@@ -32,6 +32,8 @@ class Brain:
                 interval *= config.INTERVAL_GROW_FACTOR
                 time_point -= interval
             price_sum += mid
+        if len(trend) > config.TREND_LEN:
+            trend = trend[:config.TREND_LEN]
         logger.debug('trend: ' + str([(int(now_time - a), b) for (a, b) in trend]))
         return trend
 
@@ -81,7 +83,7 @@ class Brain:
         trend = self.get_trend(timestamp)
         momentum = self.get_momentum()
 
-        if len(trend) >= config.MIN_TREND_LEN and len(momentum) >= len(config.MOMENTUM_LR_RANGE):
+        if len(trend) >= config.TREND_LEN and len(momentum) >= len(config.MOMENTUM_LR_RANGE):
             history_buy_avg, history_sell_avg = self.memory.history_trade_avg
             trade_amount = self.decide_trade(trend, momentum)
             if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:

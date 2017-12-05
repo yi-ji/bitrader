@@ -1,6 +1,7 @@
 *.pyc
 data/ETH-data/*
 data/test/*
+data/*backup*
 *.txt
 *.json
 ghostdriver.log

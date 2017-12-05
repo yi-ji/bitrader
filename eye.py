@@ -1,6 +1,7 @@
 import config
 from utils import logger
 import time, threading, sys, signal
+from selenium.common.exceptions import NoSuchElementException
 
 
 class Eye:
@@ -48,19 +49,25 @@ class Eye:
 
     def watch(self):
         while True:
-            ask_price = self.get_eth_price('Ask')
-            bid_price = self.get_eth_price('Bid')
-            if ask_price == 'CLOSED' or bid_price == 'CLOSED':
-                logger.debug('showing CLOSED')
-                self.closed_retry += 1
-                if self.closed_retry > 10:
-                    logger.info('refresh web driver')
-                    self.refresh_driver()
-                    self.closed_retry = 0
-                time.sleep(1)
-                continue
-            balance_eth = self.get_balance_eth()
-            balance_jpy = self.get_balance_jpy()
-            self.memory.update(ask_price, bid_price, balance_eth, balance_jpy, int(time.time()))
-            time.sleep(config.WATCH_INTERVAL)
-            logger.debug('Ask: ' + ask_price + ' Bid: ' + bid_price + ' ETH: ' + balance_eth + ' JPY: ' + balance_jpy)
+            try:
+                ask_price = self.get_eth_price('Ask')
+                bid_price = self.get_eth_price('Bid')
+                if ask_price == 'CLOSED' or bid_price == 'CLOSED':
+                    logger.debug('showing CLOSED')
+                    self.closed_retry += 1
+                    if self.closed_retry > 10:
+                        self.driver.save_screenshot('closed.png')
+                        logger.info('showing CLOSED, refresh web driver')
+                        self.refresh_driver()
+                        self.closed_retry = 0
+                    time.sleep(1)
+                    continue
+                balance_eth = self.get_balance_eth()
+                balance_jpy = self.get_balance_jpy()
+                self.memory.update(ask_price, bid_price, balance_eth, balance_jpy, int(time.time()))
+                time.sleep(config.WATCH_INTERVAL)
+                logger.debug('Ask: ' + ask_price + ' Bid: ' + bid_price + ' ETH: ' + balance_eth + ' JPY: ' + balance_jpy)
+            except NoSuchElementException:
+                self.driver.save_screenshot('NoSuchElementException.png')
+                logger.warn('NoSuchElementException, refresh web driver')
+                self.refresh_driver()

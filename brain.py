@@ -10,6 +10,7 @@ class Brain:
     def __init__(self, _memory, _my_hand):
         self.memory = _memory
         self.hand = _my_hand
+        self.thinking = True
 
     def get_trend(self, now_time):
         trend = []
@@ -35,10 +36,6 @@ class Brain:
         return trend
 
     def get_momentum(self):
-        if len(self.memory.first_order) < max(config.MOMENTUM_LR_RANGE):
-            logger.debug('first_order array (' + str(len(self.memory.first_order)) + '/' + str(
-                max(config.MOMENTUM_LR_RANGE)) + ') not ready yet, later')
-            return None
         momentum = []
         for lr_range in config.MOMENTUM_LR_RANGE:
             lr_range = lr_range / config.WATCH_INTERVAL
@@ -65,7 +62,22 @@ class Brain:
         logger.debug('proposed trading amount: ' + str(int(trade_amount)))
         return int(trade_amount)
 
+    def thinkable(self, timestamp):
+        if not self.memory.buffer or not self.memory.cache or not self.memory.first_order:
+            return False
+        if int(self.memory.buffer[0][0]) < timestamp - config.INDICATER_INETRVAL_INIT:
+            return False
+        return True
+
     def think(self, timestamp):
+        if not self.thinkable(timestamp):
+            if self.thinking:
+                self.thinking = False
+                logger.warn('data outdated, not thinking now')
+            return
+        if not self.thinking:
+            logger.info('start thinking again')
+        self.thinking = True
         trend = self.get_trend(timestamp)
         momentum = self.get_momentum()
 

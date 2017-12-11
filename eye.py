@@ -69,5 +69,5 @@ class Eye:
                 logger.debug('Ask: ' + ask_price + ' Bid: ' + bid_price + ' ETH: ' + balance_eth + ' JPY: ' + balance_jpy)
             except NoSuchElementException:
                 self.driver.save_screenshot('NoSuchElementException.png')
-                logger.warn('NoSuchElementException, refresh web driver')
+                logger.error('NoSuchElementException, refresh web driver')
                 self.refresh_driver()

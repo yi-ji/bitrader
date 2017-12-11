@@ -5,15 +5,27 @@ from email.mime.text import MIMEText
 
 class Logger:
     def __init__(self):
-        pass
+        self.f = open('email.txt', 'w')
+        self.warn_times = 0
+
+    def __exit__(self):
+        self.f.close()
+
+    def write_email_header(self):
+        self.f.write('To: ' + ', '.join(config.EMAIL) + '\n')
+        self.f.write('Subject: bitrader notification' + '\n')
+        self.f.write('From: bitrader' + '\n')
+
+    def write_email_msg(self, msg):
+        f.write('\n' + msg + '\n')
 
     def send_email(self, msg):
-        with open('email.txt', 'w') as f:
-            f.write('To: ' + ', '.join(config.EMAIL) + '\n')
-            f.write('Subject: bitrader notification' + '\n')
-            f.write('From: bitrader' + '\n')
-            f.write('\n' + msg + '\n')
+        self.write_email_msg(msg)
         p = os.popen('sendmail -t < email.txt', 'w')
+        self.f.seek(0)
+        self.f.truncate()
+        self.write_email_header()
+        self.warn_times = 0
 
     def log(self, msg):
         print(msg)
@@ -34,7 +46,11 @@ class Logger:
     def warn(self, msg):
         msg = self.time_header() + ' [WARN]: ' + msg
         self.log(msg)
-        self.send_email(msg)
+        if self.warn_times < 10:
+            self.write_email_msg(msg)
+            self.warn_times += 1
+        else:
+            self.send_email(msg)
 
     def error(self, msg):
         msg = self.time_header() + ' [ERROR]: ' + msg

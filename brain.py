@@ -57,17 +57,22 @@ class Brain:
         trade_amount = config.TRADE_AMOUNT_BASE * (-trend_avg)
         delta = min(abs(trade_amount), config.DAMP_COEF * momentum_avg * momentum_avg)
         trade_amount = trade_amount - delta if trade_amount >= 0 else trade_amount + delta
+        history_buy_avg, history_sell_avg = self.memory.history_trade_avg
         if trade_amount > 0:
             trade_amount *= min(1, math.sqrt(float(self.memory.balance_jpy)/float(self.memory.balance_eth*self.memory.ask)))
+            trade_amount *= float(history_sell_avg)/float(self.memory.ask)
+            history_avg = 'history_sell_avg: '+str(int(history_sell_avg))
         else:
             trade_amount *= min(1, math.sqrt(float(self.memory.balance_eth*self.memory.bid)/float(self.memory.balance_jpy)))
-        logger.debug('proposed trading amount: ' + str(int(trade_amount)))
+            trade_amount *= float(self.memory.bid)/float(history_buy_avg)
+            history_avg = 'history_buy_avg: '+str(int(history_buy_avg))
+        logger.debug(history_avg+' trend_avg: '+str(trend_avg)+' momentum_avg: '+str(momentum_avg)+' proposed trading amount: '+str(int(trade_amount)))
         return int(trade_amount)
 
     def thinkable(self, timestamp):
         if not self.memory.buffer or not self.memory.cache or not self.memory.first_order:
             return False
-        if int(self.memory.buffer[0][0]) < timestamp - config.INDICATER_INETRVAL_INIT:
+        if int(self.memory.buffer[0][0]) < timestamp - config.INDICATER_INETRVAL_INIT + config.THINK_INTERVAL:
             return False
         return True
 
@@ -78,20 +83,20 @@ class Brain:
                 logger.warn('data outdated, not thinking now')
             return
         if not self.thinking:
-            logger.info('start thinking again')
+            logger.warn('start thinking again')
         self.thinking = True
         trend = self.get_trend(timestamp)
         momentum = self.get_momentum()
 
         if len(trend) >= config.TREND_LEN and len(momentum) >= len(config.MOMENTUM_LR_RANGE):
-            history_buy_avg, history_sell_avg = self.memory.history_trade_avg
+            #history_buy_avg, history_sell_avg = self.memory.history_trade_avg
             trade_amount = self.decide_trade(trend, momentum)
-            if trade_amount > config.MIN_TRADE_AMOUNT and self.memory.ask < history_sell_avg:
-                logger.debug('history_sell_avg: '+str(history_sell_avg))
+            if trade_amount > config.MIN_TRADE_AMOUNT:
+                #logger.debug('history_sell_avg: '+str(history_sell_avg))
                 if self.hand.buy(self.memory.ask, jpy=trade_amount):
                     self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
-            if trade_amount < -config.MIN_TRADE_AMOUNT and self.memory.bid > history_buy_avg:
-                logger.debug('history_buy_avg: '+str(history_buy_avg))
+            if trade_amount < -config.MIN_TRADE_AMOUNT:
+                #logger.debug('history_buy_avg: '+str(history_buy_avg))
                 if self.hand.sell(self.memory.bid, jpy=-trade_amount):
                     self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
 

@@ -57,7 +57,7 @@ class Eye:
                     self.closed_retry += 1
                     if self.closed_retry > 10:
                         self.driver.save_screenshot('closed.png')
-                        logger.info('showing CLOSED, refresh web driver')
+                        logger.warn('showing CLOSED, refresh web driver')
                         self.refresh_driver()
                         self.closed_retry = 0
                     time.sleep(1)

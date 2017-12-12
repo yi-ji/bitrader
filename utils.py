@@ -1,5 +1,5 @@
 import config
-import json, leveldb, time, smtplib, os
+import json, leveldb, time, smtplib, os, time
 from email.mime.text import MIMEText
 
 
@@ -7,6 +7,7 @@ class Logger:
     def __init__(self):
         self.f = open('email.txt', 'w')
         self.warn_times = 0
+        self.write_email_header()
 
     def __exit__(self):
         self.f.close()
@@ -15,13 +16,16 @@ class Logger:
         self.f.write('To: ' + ', '.join(config.EMAIL) + '\n')
         self.f.write('Subject: bitrader notification' + '\n')
         self.f.write('From: bitrader' + '\n')
+        self.f.flush()
 
     def write_email_msg(self, msg):
-        f.write('\n' + msg + '\n')
+        self.f.write('\n' + msg + '\n')
+        self.f.flush()
 
     def send_email(self, msg):
         self.write_email_msg(msg)
         p = os.popen('sendmail -t < email.txt', 'w')
+        time.sleep(1) # for sending mail
         self.f.seek(0)
         self.f.truncate()
         self.write_email_header()

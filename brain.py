@@ -91,12 +91,10 @@ class Brain:
         if len(trend) >= config.TREND_LEN and len(momentum) >= len(config.MOMENTUM_LR_RANGE):
             #history_buy_avg, history_sell_avg = self.memory.history_trade_avg
             trade_amount = self.decide_trade(trend, momentum)
-            if trade_amount > config.MIN_TRADE_AMOUNT:
-                #logger.debug('history_sell_avg: '+str(history_sell_avg))
+            if trade_amount > config.MIN_TRADE_AMOUNT and trade_amount < self.memory.balance_jpy:
                 if self.hand.buy(self.memory.ask, jpy=trade_amount):
                     self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
-            if trade_amount < -config.MIN_TRADE_AMOUNT:
-                #logger.debug('history_buy_avg: '+str(history_buy_avg))
+            if trade_amount < -config.MIN_TRADE_AMOUNT and -trade_amount < self.memory.balance_eth*self.memory.bid:
                 if self.hand.sell(self.memory.bid, jpy=-trade_amount):
                     self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
 

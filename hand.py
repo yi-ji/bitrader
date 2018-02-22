@@ -1,7 +1,6 @@
-from utils import logger
+from utils import logger, date2timestamp
 import time
 from selenium.common.exceptions import ElementNotVisibleException, TimeoutException
-from datetime import datetime
 import selenium.webdriver.support.expected_conditions as EC
 import selenium.webdriver.support.ui as ui
 
@@ -12,20 +11,20 @@ class Hand:
 
     def buy(self, price, eth=None, jpy=None):
         detail = ' price: ' + str(price) + ', amount ' + str(eth) + ' ether or ' + str(jpy) + ' JPY '
-        logger.info('buying with' + detail)
+        logger.warn('buying with' + detail)
         if eth is not None:
             self.buy_by_eth(eth)
         elif jpy is not None:
             self.buy_by_eth(float(jpy) / float(price))
         else:
             logger.warn('buying failed, eth and jpy both empty.')
-            return False
-        if self.check_trade_record():
-            logger.info('bought with' + detail)
-            return True
-        else:
-            logger.warn('buying failed!' + detail)
-            return False
+        #    return False
+        # if self.check_trade_record():
+        #     logger.info('bought with' + detail)
+        #     return True
+        # else:
+        #     logger.warn('buying failed!' + detail)
+        #     return False
 
     def check_trade_record(self):
         records = self.driver.find_elements_by_xpath("//td[@data-prop='exec_date']")
@@ -33,7 +32,7 @@ class Hand:
         for record in records:
             if len(record.text) < 2:
                 continue
-            timestamp = int(time.mktime(datetime.strptime(record.text, '%b %d, %Y %H:%M:%S').timetuple()))
+            timestamp = date2timestamp(record.text)
             if now_time - timestamp < 10:
                 return True
         return False
@@ -49,24 +48,24 @@ class Hand:
             eth_buy_confirm.click()
             time.sleep(5)
         except TimeoutException:
-            logger.debug('waiting for click buy confirm button timeout')
+            logger.warn('waiting for click buy-confirm button timeout')
 
     def sell(self, price, eth=None, jpy=None):
         detail = ' price: ' + str(price) + ', amount ' + str(eth) + ' ether or ' + str(jpy) + ' JPY '
-        logger.info('selling with' + detail)
+        logger.warn('selling with' + detail)
         if eth is not None:
             self.sell_by_eth(eth)
         elif jpy is not None:
             self.sell_by_eth(float(jpy) / float(price))
         else:
             logger.warn('selling failed, eth and jpy both empty.')
-            return False
-        if self.check_trade_record():
-            logger.info('sold with' + detail)
-            return True
-        else:
-            logger.warn('selling failed!' + detail)
-            return False
+        #    return False
+        # if self.check_trade_record():
+        #     logger.info('sold with' + detail)
+        #     return True
+        # else:
+        #     logger.warn('selling failed!' + detail)
+        #     return False
 
     def sell_by_eth(self, eth):
         eth_input = self.driver.find_element_by_id('MainContent_TextBox1')
@@ -79,4 +78,4 @@ class Hand:
             eth_sell_confirm.click()
             time.sleep(5)
         except TimeoutException:
-            logger.debug('waiting for click sell confirm button timeout')
+            logger.warn('waiting for click sell-confirm button timeout')

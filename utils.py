@@ -1,7 +1,7 @@
 import config
 import json, leveldb, time, smtplib, os, time
 from email.mime.text import MIMEText
-
+from datetime import datetime
 
 class Logger:
     def __init__(self):
@@ -77,3 +77,6 @@ def json2leveldb():
             timestamp = str(int(time_price_pair[0]) / 1000)
             price = str(time_price_pair[1])
             db.Put(timestamp, price)
+
+def date2timestamp(date_text):
+    return int(time.mktime(datetime.strptime(date_text, '%b %d, %Y %H:%M:%S').timetuple()))

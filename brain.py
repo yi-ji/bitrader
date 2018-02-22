@@ -92,11 +92,9 @@ class Brain:
             #history_buy_avg, history_sell_avg = self.memory.history_trade_avg
             trade_amount = self.decide_trade(trend, momentum)
             if trade_amount > config.MIN_TRADE_AMOUNT and trade_amount < self.memory.balance_jpy:
-                if self.hand.buy(self.memory.ask, jpy=trade_amount):
-                    self.memory.memorize_trade(self.memory.ask, trade_amount, timestamp)
+                self.hand.buy(self.memory.ask, jpy=trade_amount)
             if trade_amount < -config.MIN_TRADE_AMOUNT and -trade_amount < self.memory.balance_eth*self.memory.bid:
-                if self.hand.sell(self.memory.bid, jpy=-trade_amount):
-                    self.memory.memorize_trade(self.memory.bid, trade_amount, timestamp)
+                self.hand.sell(self.memory.bid, jpy=-trade_amount)
 
     def start_thinking(self):
         while True:

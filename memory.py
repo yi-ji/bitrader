@@ -27,6 +27,20 @@ class Memory:
         first_order_state = 'first_order: '+str(len(self.first_order))+'/'+str(config.PRICE_CACHE_SIZE)
         logger.debug(', '.join([buffer_state, cache_state, first_order_state]))
 
+    def check_recent_transactions(self, recent_transactions):
+        phrase = {'Buy': 'bought', 'Sell': 'sold'}
+        for tran in recent_transactions:
+            try:
+                self.trade_db.Get(str(tran['timestamp']))
+            except KeyError:
+                success = tran['status']=='Transaction Complete'
+                sign = 1 if tran['buy_sell'] == 'Buy' else -1
+                self.memorize_trade(tran['price'], sign*int(tran['amount']*tran['price']), tran['timestamp'], success)
+                if success:
+                    logger.info(str(tran['amount'])+' ether were '+phrase[tran['buy_sell']]+' with price '+str(tran['price']))
+                else:
+                    logger.warn(tran['status']+' when '+str(tran['amount'])+' ether were going to be '+phrase[tran['buy_sell']]+' with price '+str(tran['price']))
+
     def update(self, ask_price, bid_price, balance_eth, balance_jpy, timestamp):
         self.balance_jpy, self.balance_eth = int(balance_jpy), float(balance_eth)
         self.ask, self.bid = int(ask_price), int(bid_price)
@@ -46,7 +60,9 @@ class Memory:
         for trade in history_trade:
             trade = trade[1].split('|')
             price, amount = int(trade[0]), int(trade[1])
-            if amount >= 0:
+            if amount == 'FAILED':
+                continue
+            elif amount >= 0:
                 buy_avg += price * amount
                 buy_amount += amount
             else:
@@ -56,9 +72,10 @@ class Memory:
         sell_avg /= sell_amount
         return (buy_avg, sell_avg)
 
-    def memorize_trade(self, price, amount, timestamp):
-        self.trade_db.Put(str(timestamp), str(int(price)) + '|' + str(int(amount)))
-        self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, timestamp)
+    def memorize_trade(self, price, amount, timestamp, success=True):
+        seperator = '|' if success else '|FAILED|'
+        self.trade_db.Put(str(timestamp), str(int(price)) + seperator + str(int(amount)))
+        self.history_trade_avg = self.retrospect_trade(config.DAY0_TIMESTAMP, int(time.time()))
 
     def retrospect_price(self, time_from, time_to): # time_from -> time_to = past -> now
         past_data = list(self.price_db.RangeIter(key_from=str(time_from), key_to=str(time_to)))
